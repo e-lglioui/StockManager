@@ -3,22 +3,28 @@
 import type React from "react"
 import { useState } from "react"
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native"
+import { useNavigation } from "@react-navigation/native"
 import { Input } from "../components/common/Input"
 import { Button } from "../components/common/Button"
 import { useAuth } from "../hooks/useAuth"
+import type { LoginScreenNavigationProp } from "../types/navigation"
 
 export const LoginScreen: React.FC = () => {
   const [secretCode, setSecretCode] = useState("")
   const { login, error, loading } = useAuth()
+  const navigation = useNavigation<LoginScreenNavigationProp>()
 
-  const handleLogin = () => {
-    console.log("secretCode", secretCode)
-    login(secretCode)
+  const handleLogin = async () => {
+    const success = await login(secretCode)
+    if (!success) {
+      navigation.replace("ProductList")
+    }
   }
 
   return (
     <View style={styles.container}>
-      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" secureTextEntry />
+      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" 
+       />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (

@@ -1,14 +1,14 @@
 import type { FC } from "react"
 import { NavigationContainer } from "@react-navigation/native"
 import { AuthProvider } from "./src/context/AuthContext"
-import { AppNavigator } from './src/navigation/AppNavigator'
+import AppNavigator from './src/navigation/AppNavigator'
 
 const App: FC = () => {
   return (
     <AuthProvider>
-      <NavigationContainer>
+      {/* <NavigationContainer> */}
         <AppNavigator />
-      </NavigationContainer>
+      {/* </NavigationContainer> */}
     </AuthProvider>
   )
 }
