@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import {
   View,
   FlatList,
@@ -13,6 +13,7 @@ import {
   Dimensions,
   Modal,
   SafeAreaView,
+  RefreshControl,
 } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { api } from "../services/api"
@@ -21,6 +22,7 @@ import type { ProductListNavigationProp } from "../types/navigation"
 import Navbar from "../components/Navbar"
 import SearchAndFilter from "../components/SearchAndFilter"
 import Icon from "react-native-vector-icons/MaterialIcons"
+import { useProductFiltering } from "../hooks/useProductFiltering"
 
 const { width } = Dimensions.get("window")
 const CARD_MARGIN = 8
@@ -28,116 +30,92 @@ const CARD_WIDTH = width / 2 - CARD_MARGIN * 3
 
 const ProductListScreen: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isMenuVisible, setIsMenuVisible] = useState(false)
   const [isSearchVisible, setIsSearchVisible] = useState(false)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const navigation = useNavigation<ProductListNavigationProp>()
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  const { filteredProducts, filters, setFilters, sortOption, setSortOption, searchQuery, setSearchQuery } =
+    useProductFiltering(products)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       const fetchedProducts = await api.getProducts()
       setProducts(fetchedProducts)
-      setFilteredProducts(fetchedProducts)
       setError(null)
     } catch (err) {
       setError("Failed to fetch data. Please try again.")
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [])
 
-  const handleProductPress = (product: Product) => {
-    navigation.navigate("ProductDetail", { productId: product.id })
-  }
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
-  const getTotalStock = (product: Product) => {
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true)
+    fetchData()
+  }, [fetchData])
+
+  const handleProductPress = useCallback(
+    (product: Product) => {
+      navigation.navigate("ProductDetail", { productId: product.id })
+    },
+    [navigation],
+  )
+
+  const getTotalStock = useCallback((product: Product) => {
     return product.stocks.reduce((sum, stock) => sum + stock.quantity, 0)
-  }
+  }, [])
 
-  const getStockStatus = (product: Product) => {
-    const totalStock = getTotalStock(product)
-    if (totalStock <= 0) return "outOfStock"
-    if (totalStock < 10) return "lowStock"
-    return "inStock"
-  }
+  const getStockStatus = useCallback(
+    (product: Product) => {
+      const totalStock = getTotalStock(product)
+      if (totalStock <= 0) return "outOfStock"
+      if (totalStock < 10) return "lowStock"
+      return "inStock"
+    },
+    [getTotalStock],
+  )
 
-  const handleSearch = (query: string) => {
-    const filtered = products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.type.toLowerCase().includes(query.toLowerCase()) ||
-        product.supplier.toLowerCase().includes(query.toLowerCase()),
-    )
-    setFilteredProducts(filtered)
-  }
+  const renderProductItem = useCallback(
+    ({ item }: { item: Product }) => {
+      const stockStatus = getStockStatus(item)
+      const totalStock = getTotalStock(item)
 
-  const handleFilter = (filter: string) => {
-    // Implement filter logic here
-    // For now, we'll just log the filter
-    console.log("Filter by:", filter)
-  }
-
-  const handleSort = (sortBy: string) => {
-    let sorted: Product[]
-    if (sortBy === "price") {
-      sorted = [...filteredProducts].sort((a, b) => {
-        return sortOrder === "asc" ? a.price - b.price : b.price - a.price
-      })
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-    } else if (sortBy === "name") {
-      sorted = [...filteredProducts].sort((a, b) => {
-        return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-      })
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-    } else {
-      // Default to sorting by quantity
-      sorted = [...filteredProducts].sort((a, b) => {
-        const totalStockA = getTotalStock(a)
-        const totalStockB = getTotalStock(b)
-        return sortOrder === "asc" ? totalStockA - totalStockB : totalStockB - totalStockA
-      })
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-    }
-    setFilteredProducts(sorted)
-  }
-
-  const renderProductItem = ({ item }: { item: Product }) => {
-    const stockStatus = getStockStatus(item)
-    const totalStock = getTotalStock(item)
-
-    return (
-      <TouchableOpacity style={styles.productCard} onPress={() => handleProductPress(item)}>
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="contain" />
-          <View style={[styles.stockBadge, styles[stockStatus]]}>
-            <Text style={styles.stockText}>{totalStock <= 0 ? "Out of Stock" : `${totalStock} in stock`}</Text>
+      return (
+        <TouchableOpacity style={styles.productCard} onPress={() => handleProductPress(item)}>
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="contain" />
+            <View style={[styles.stockBadge, styles[stockStatus]]}>
+              <Text style={styles.stockText}>{totalStock <= 0 ? "Out of Stock" : `${totalStock} in stock`}</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.productInfo}>
-          <Text numberOfLines={2} style={styles.productName}>
-            {item.name}
-          </Text>
-          <Text style={styles.productType}>{item.type}</Text>
+          <View style={styles.productInfo}>
+            <Text numberOfLines={2} style={styles.productName}>
+              {item.name}
+            </Text>
+            <Text style={styles.productType}>{item.type}</Text>
 
-          <View style={styles.priceContainer}>
-            <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
-            {item.solde && <Text style={styles.salePrice}>${item.solde.toFixed(2)}</Text>}
+            <View style={styles.priceContainer}>
+              <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+              {item.solde && <Text style={styles.salePrice}>${item.solde.toFixed(2)}</Text>}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    )
-  }
+        </TouchableOpacity>
+      )
+    },
+    [getStockStatus, getTotalStock, handleProductPress],
+  )
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -149,6 +127,9 @@ const ProductListScreen: React.FC = () => {
     return (
       <View style={styles.centered}>
         <Text style={styles.error}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
+          <Text style={styles.retryButtonText}>Réessayer</Text>
+        </TouchableOpacity>
       </View>
     )
   }
@@ -157,7 +138,15 @@ const ProductListScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.mainContainer}>
         <Navbar onMenuPress={() => setIsMenuVisible(true)} onSearchPress={() => setIsSearchVisible(!isSearchVisible)} />
-        {isSearchVisible && <SearchAndFilter onSearch={handleSearch} onFilter={handleFilter} onSort={handleSort} />}
+        <SearchAndFilter
+          onSearch={setSearchQuery}
+          onFilter={setFilters}
+          onSort={setSortOption}
+          filters={filters}
+          sortOption={sortOption}
+          searchQuery={searchQuery}
+          isVisible={isSearchVisible}
+        />
         <FlatList
           data={filteredProducts}
           renderItem={renderProductItem}
@@ -165,7 +154,8 @@ const ProductListScreen: React.FC = () => {
           numColumns={2}
           columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={<Text style={styles.emptyList}>No products available.</Text>}
+          ListEmptyComponent={<Text style={styles.emptyList}>Aucun produit disponible.</Text>}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
         />
       </View>
       <Modal
@@ -184,7 +174,7 @@ const ProductListScreen: React.FC = () => {
               }}
             >
               <Icon name="home" size={24} color="#007AFF" />
-              <Text style={styles.menuItemText}>Home</Text>
+              <Text style={styles.menuItemText}>Accueil</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
@@ -194,7 +184,7 @@ const ProductListScreen: React.FC = () => {
               }}
             >
               <Icon name="category" size={24} color="#007AFF" />
-              <Text style={styles.menuItemText}>Categories</Text>
+              <Text style={styles.menuItemText}>Catégories</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
@@ -204,7 +194,7 @@ const ProductListScreen: React.FC = () => {
               }}
             >
               <Icon name="settings" size={24} color="#007AFF" />
-              <Text style={styles.menuItemText}>Settings</Text>
+              <Text style={styles.menuItemText}>Paramètres</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -220,7 +210,6 @@ const styles = StyleSheet.create({
   },
   mainContainer: {
     flex: 1,
-    marginTop: 40,
   },
   centered: {
     flex: 1,
@@ -312,6 +301,17 @@ const styles = StyleSheet.create({
     color: "#FF3B30",
     textAlign: "center",
     marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
   emptyList: {
     textAlign: "center",

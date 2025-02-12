@@ -41,4 +41,15 @@ export interface Warehouseman {
   secretKey: string
   warehouseId: number
 }
+export interface FilterOptions {
+  name?: string
+  type?: string
+  minPrice?: number
+  maxPrice?: number
+  supplier?: string
+}
 
+export interface SortOption {
+  field: 'name' | 'price' | 'quantity'
+  direction: 'asc' | 'desc'
+}
