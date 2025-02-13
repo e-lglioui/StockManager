@@ -53,3 +53,6 @@ export interface SortOption {
   field: 'name' | 'price' | 'quantity'
   direction: 'asc' | 'desc'
 }
+export interface ApiError {
+  message: string
+}

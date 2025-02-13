@@ -14,15 +14,23 @@ import {
   Modal,
   TextInput,
 } from "react-native"
-import { useRoute } from "@react-navigation/native"
+import { useRoute, useNavigation } from "@react-navigation/native"
 import { api } from "../services/api"
-import type { Product } from "../types/api"
+import type { Product, ApiError } from "../types/api"
 import type { ProductDetailRouteProp } from "../types/navigation"
 import Icon from "react-native-vector-icons/MaterialIcons"
+import * as FileSystem from "expo-file-system"
+import * as Sharing from "expo-sharing"
+import { generatePDF } from "../utils/pdfGenerator"
 
 type ModalType = "restock" | "unload" | "addStock" | "editStock"
 
+const isApiError = (error: unknown): error is ApiError => {
+  return typeof error === "object" && error !== null && "message" in error
+}
+
 const ProductDetailScreen: React.FC = () => {
+
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,6 +44,7 @@ const ProductDetailScreen: React.FC = () => {
   const [longitude, setLongitude] = useState("")
   const [isEditHistoryExpanded, setIsEditHistoryExpanded] = useState(false)
   const route = useRoute<ProductDetailRouteProp>()
+  const navigation = useNavigation()
   const { productId } = route.params
 
   useEffect(() => {
@@ -132,10 +141,8 @@ const ProductDetailScreen: React.FC = () => {
         setProduct(updatedProduct)
         setModalVisible(false)
       } catch (error) {
-        Alert.alert(
-          "Error",
-          `Failed to ${modalType === "addStock" ? "add" : "update"} stock location: ${error.message}`,
-        )
+        const errorMessage = isApiError(error) ? error.message : "Failed to update stock location. Please try again."
+        Alert.alert("Error", errorMessage)
       }
       return
     }
@@ -169,7 +176,10 @@ const ProductDetailScreen: React.FC = () => {
       )
       setModalVisible(false)
     } catch (error) {
-      Alert.alert("Error", `Failed to ${modalType} product: ${error.message}`)
+      Alert.alert(
+        "Error",
+        `Failed to ${modalType} product: ${error instanceof Error ? error.message : "Unknown error"}`,
+      )
     }
   }
 
@@ -209,11 +219,34 @@ const ProductDetailScreen: React.FC = () => {
             setProduct(updatedProduct)
             Alert.alert("Success", "Stock location deleted successfully")
           } catch (error) {
-            Alert.alert("Error", `Failed to delete stock location: ${error.message}`)
+            Alert.alert(
+              "Error",
+              `Failed to delete stock location: ${error instanceof Error ? error.message : "Unknown error"}`,
+            )
           }
         },
       },
     ])
+  }
+
+  
+
+  const handleExportPDF = async () => {
+    if (!product) return
+
+    try {
+      const pdfContent = await generatePDF(product)
+      const pdfPath = `${FileSystem.documentDirectory}product_${product.id}.pdf`
+      await FileSystem.writeAsStringAsync(pdfPath, pdfContent, { encoding: FileSystem.EncodingType.Base64 })
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(pdfPath)
+      } else {
+        Alert.alert("Error", "Sharing is not available on this device")
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to generate or share PDF")
+    }
   }
 
   if (loading) {
@@ -248,7 +281,9 @@ const ProductDetailScreen: React.FC = () => {
         <View style={styles.sectionContainer}>
           <View style={styles.stockContainer}>
             <Text style={styles.stockStatus}>Status: {stockStatus}</Text>
-            <View style={[styles.stockIndicator, styles[stockStatus.toLowerCase().replace(" ", "")]]} />
+            <View
+              // style={[styles.stockIndicator, styles[stockStatus.toLowerCase().replace(" ", "") as keyof typeof styles]]}
+            />
           </View>
           <Text style={styles.totalStock}>Total Quantity: {totalStock}</Text>
         </View>
@@ -326,6 +361,11 @@ const ProductDetailScreen: React.FC = () => {
               ))}
             </View>
           )}
+        </View>
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleExportPDF}>
+            <Text style={styles.actionButtonText}>Export PDF</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -636,6 +676,25 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     textAlign: "center",
     marginVertical: 16,
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+  },
+  actionButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  actionButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
   },
 })
 

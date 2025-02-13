@@ -15,16 +15,18 @@ export const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>()
 
   const handleLogin = async () => {
-    const success = await login(secretCode)
-    if (!success) {
+    try {
+      await login(secretCode)
       navigation.replace("ProductList")
+    } catch (error) {
+      // Error handling is managed by useAuth hook
+      console.error("Login failed:", error)
     }
   }
 
   return (
     <View style={styles.container}>
-      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" 
-       />
+      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" secureTextEntry />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
