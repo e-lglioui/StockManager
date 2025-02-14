@@ -56,3 +56,11 @@ export interface SortOption {
 export interface ApiError {
   message: string
 }
+export interface DashboardData {
+  totalProducts: number
+  totalCities: number
+  outOfStockProducts: number
+  totalStockValue: number
+  mostAddedProducts: Array<{ name: string; quantity: number }>
+  mostRemovedProducts: Array<{ name: string; quantity: number }>
+}

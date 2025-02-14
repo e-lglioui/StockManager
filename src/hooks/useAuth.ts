@@ -1,67 +1,31 @@
 "use client"
 
-import { useState, useContext } from "react"
-import { AuthContext } from "../context/AuthContext"
+import { useState } from "react"
 import { api } from "../services/api"
-import { storeData, getData } from "../utils/asyncStorage"
+import type { Warehouseman } from "../types/api"
 
-export const useAuth = () => {
-  const [error, setError] = useState<string | null>(null)
+export function useAuth() {
   const [loading, setLoading] = useState(false)
-  const context = useContext(AuthContext)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-
-  const { user, setUser } = context
-
-  const login = async (secretKey: string): Promise<void> => {
-    setLoading(true)
-    setError(null)
+  const login = async (secretKey: string): Promise<Warehouseman | null> => {
     try {
-      const warehouseman = await api.getWarehousemanBySecretKey(secretKey)
-      if (warehouseman) {
-        await storeData("userId", warehouseman.id.toString())
-        setUser(warehouseman)
-      } else {
-        setError("Code secret incorrect")
+      setLoading(true)
+      setError(null)
+      const user = await api.getWarehousemanBySecretKey(secretKey)
+      if (!user) {
+        setError("Code secret invalide")
+        return null
       }
+      return user
     } catch (err) {
-        
-        console.error("Erreur détaillée:", err)
-    
-        // Message d'erreur plus spécifique
-        if (err instanceof Error) {
-          setError(`Erreur: ${err.message}`)
-        } else {
-          setError("Erreur lors de la connexion")
-        }
+      setError("Une erreur s'est produite lors de la connexion")
+      return null
     } finally {
       setLoading(false)
     }
   }
 
-  const logout = async (): Promise<void> => {
-    await storeData("userId", "")
-    setUser(null)
-  }
-
-  const checkAuth = async (): Promise<void> => {
-    const userId = await getData("userId")
-    if (userId) {
-      try {
-        const warehousemen = await api.getWarehousemen()
-        const user = warehousemen.find((w) => w.id.toString() === userId)
-        if (user) {
-          setUser(user)
-        }
-      } catch (err) {
-        console.error("Erreur lors de la vérification de l'authentification:", err)
-      }
-    }
-  }
-
-  return { user, login, logout, checkAuth, error, loading }
+  return { login, loading, error }
 }
 

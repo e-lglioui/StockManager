@@ -1,5 +1,4 @@
 "use client"
-
 import type React from "react"
 import { useState } from "react"
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native"
@@ -16,17 +15,22 @@ export const LoginScreen: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      await login(secretCode)
-      navigation.replace("ProductList")
+      const user = await login(secretCode)
+      if (user) {
+        if (user.id ==="1444") {
+          navigation.navigate("Dashboard")
+        } else {
+          navigation.navigate("ProductList")
+        }
+      }
     } catch (error) {
-      // Error handling is managed by useAuth hook
       console.error("Login failed:", error)
     }
   }
 
   return (
     <View style={styles.container}>
-      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" secureTextEntry />
+      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (

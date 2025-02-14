@@ -1,14 +1,21 @@
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
-import { ParamListBase } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import type { CompositeNavigationProp } from "@react-navigation/native";
+
+// export type MainTabParamList = {
+//   Dashboard: undefined;
+//   ProductList: undefined;
+// };
+
 export type RootStackParamList = {
   Login: undefined
+  Main: undefined
   ProductList: undefined
-  // ProductDetail: { productId: number }
   BarcodeScanner: undefined
-  // AddProduct: { barcode: string }
-  ProductDetail: { productId: number };
-  AddProduct: { barcode: string };
+  ProductDetail: { productId: number }
+  AddProduct: { barcode: string }
+  Dashboard: undefined
 }
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -18,7 +25,11 @@ export type ProductListNavigationProp = NativeStackNavigationProp<RootStackParam
 export type ProductDetailNavigationProp = NativeStackNavigationProp<RootStackParamList, "ProductDetail">
 export type BarcodeScannerNavigationProp = NativeStackNavigationProp<RootStackParamList, "BarcodeScanner">
 export type AddProductNavigationProp = NativeStackNavigationProp<RootStackParamList, "AddProduct">
+export type DashboardNavigationProp = NativeStackNavigationProp<RootStackParamList, "Dashboard">
 
 export type AddProductRouteProp = RouteProp<RootStackParamList, "AddProduct">
 export type ProductDetailRouteProp = RouteProp<RootStackParamList, "ProductDetail">
-
+// export type MainTabNavigationProp = CompositeNavigationProp<
+//   BottomTabNavigationProp<MainTabParamList>,
+//   NativeStackNavigationProp<RootStackParamList>
+// >;

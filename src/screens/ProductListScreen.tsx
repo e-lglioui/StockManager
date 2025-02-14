@@ -179,7 +179,7 @@ const ProductListScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
-                
+                // Handle menu item press
                 setIsMenuVisible(false)
               }}
             >
@@ -198,7 +198,6 @@ const ProductListScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-        
       </Modal>
     </SafeAreaView>
   )

@@ -1,4 +1,4 @@
-import type { Product, Warehouseman } from "../types/api"
+import type { Product, Warehouseman ,DashboardData} from "../types/api"
 
 const API_URL = "http://172.16.9.32:3000"
 
@@ -308,6 +308,96 @@ export const api = {
     } catch (error) {
       console.error("Error updating product:", error)
       throw error
+    }
+  },
+  getDashboardData: async (): Promise<DashboardData> => {
+    try {
+      // Récupérer tous les produits
+      const products = await api.getProducts()
+      
+      // Set pour tracker les villes uniques
+      const cities = new Set<string>()
+      
+      // Calculer les statistiques de base
+      let totalStockValue = 0
+      let outOfStockProducts = 0
+      
+      // Tracker les mouvements de produits dans les 30 derniers jours
+      const productMovements = new Map()
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      
+      products.forEach(product => {
+        // Tracker les villes
+        product.stocks.forEach(stock => {
+          if (stock.localisation?.city) {
+            cities.add(stock.localisation.city)
+          }
+          
+          // Calculer la valeur totale du stock
+          totalStockValue += (stock.quantity * (product.price || 0))
+        })
+        
+        // Vérifier les produits en rupture de stock
+        const totalQuantity = product.stocks.reduce((sum, stock) => sum + stock.quantity, 0)
+        if (totalQuantity === 0) {
+          outOfStockProducts++
+        }
+        
+        // Analyser les mouvements de stock depuis l'historique editedBy
+        const recentEdits = product.editedBy
+          .filter(edit => new Date(edit.at) > thirtyDaysAgo)
+          .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+          
+        if (recentEdits.length >= 2) {
+          // Comparer les éditions consécutives
+          for (let i = 0; i < recentEdits.length - 1; i++) {
+            const currentTotalStock = product.stocks.reduce((sum, stock) => sum + stock.quantity, 0)
+            
+            const movement = {
+              productId: product.id,
+              productName: product.name,
+              quantity: Math.abs(currentTotalStock),
+              type: currentTotalStock > 0 ? 'added' : 'removed',
+              date: new Date(recentEdits[i].at)
+            }
+            
+            productMovements.set(product.id, movement)
+          }
+        }
+      })
+      
+      // Trier les mouvements pour obtenir les produits les plus ajoutés/retirés
+      const sortedMovements = Array.from(productMovements.values())
+        .sort((a, b) => b.quantity - a.quantity)
+        
+      const mostAddedProducts = sortedMovements
+        .filter(m => m.type === 'added')
+        .slice(0, 5)
+        .map(m => ({
+          name: m.productName,
+          quantity: m.quantity
+        }))
+        
+      const mostRemovedProducts = sortedMovements
+        .filter(m => m.type === 'removed')
+        .slice(0, 5)
+        .map(m => ({
+          name: m.productName,
+          quantity: m.quantity
+        }))
+
+      return {
+        totalProducts: products.length,
+        totalCities: cities.size,
+        outOfStockProducts,
+        totalStockValue,
+        mostAddedProducts,
+        mostRemovedProducts
+      }
+    } catch (error) {
+      console.error("Error calculating dashboard data:", error)
+      throw new Error("Failed to fetch dashboard data")
     }
   },
 }
