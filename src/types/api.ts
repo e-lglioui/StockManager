@@ -7,8 +7,8 @@ export interface Product {
   solde?: number
   supplier: string
   image: string
-  stocks: Stock[]
-  editedBy: EditHistory[]
+  stocks: Array<any>; // Replace 'any' with your Stock type if you have one
+  editedBy: Array<any>
 }
 
 export interface Stock {
