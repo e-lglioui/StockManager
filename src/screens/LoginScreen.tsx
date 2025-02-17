@@ -17,9 +17,12 @@ export const LoginScreen: React.FC = () => {
   const handleLogin = async () => {
     try {
       await login(secretCode)
-      navigation.replace("ProductList")
+      if(secretCode ==="RK189987A"){
+        // navigation.replace("d")
+      }
+      navigation.replace("Home")
     } catch (error) {
-      // Error handling is managed by useAuth hook
+
       console.error("Login failed:", error)
     }
   }

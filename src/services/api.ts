@@ -21,20 +21,18 @@ export const api = {
 
   updateStock: async (productId: number, warehouseId: number, quantity: number): Promise<Product> => {
     try {
-      // 1. Récupérer l'état actuel du produit
+   
       const currentProduct = await api.getProduct(productId)
 
-      // 2. Trouver le stock existant ou créer un nouveau
       const existingStockIndex = currentProduct.stocks.findIndex((stock) => stock.id === warehouseId)
 
       let updatedStocks
       if (existingStockIndex >= 0) {
-        // Mettre à jour le stock existant
         updatedStocks = currentProduct.stocks.map((stock) =>
           stock.id === warehouseId ? { ...stock, quantity: Math.max(0, quantity) } : stock,
         )
       } else {
-        // Ajouter un nouveau stock
+        // Si le stock n'existe pas, ajouter un nouveau stock
         const newStock = {
           id: warehouseId,
           quantity: Math.max(0, quantity),
@@ -42,7 +40,6 @@ export const api = {
         updatedStocks = [...currentProduct.stocks, newStock]
       }
 
-      // 3. Mettre à jour le produit avec les nouveaux stocks
       const response = await fetch(`${API_URL}/products/${productId}`, {
         method: "PUT",
         headers: {
@@ -100,13 +97,12 @@ export const api = {
       //   throw new Error("Paramètres invalides : Vérifiez les valeurs passées.")
       // }
 
-      // Récupération du produit actuel
       const currentProduct = await api.getProduct(productId)
       if (!currentProduct) {
         throw new Error(`Produit avec ID ${productId} introuvable.`)
       }
 
-      // Création du nouveau stock
+     
       const newStock = {
         id: currentProduct.stocks.length + 1,
         quantity: Math.max(0, quantity),
@@ -118,10 +114,10 @@ export const api = {
         },
       }
 
-      // Mise à jour du stock
+      
       const updatedStocks = [...currentProduct.stocks, newStock]
 
-      // Envoi de la mise à jour au serveur
+   
       const response = await fetch(`${API_URL}/products/${productId}`, {
         method: "PUT",
         headers: {
@@ -148,7 +144,7 @@ export const api = {
       return response.json()
     } catch (error) {
       console.error("Error in addStock:", error)
-      throw error // Re-throw the original error
+      throw error 
     }
   },
   deleteStockLocation: async (productId: number, stockId: number): Promise<Product> => {
@@ -166,7 +162,7 @@ export const api = {
           stocks: updatedStocks,
           editedBy: [
             {
-              warehousemanId: 1, // This should be the actual warehouseman ID
+              warehousemanId: 1, 
               at: new Date().toISOString(),
             },
             ...currentProduct.editedBy,
@@ -224,7 +220,7 @@ export const api = {
           stocks: updatedStocks,
           editedBy: [
             {
-              warehousemanId: 1, // This should be the actual warehouseman ID
+              warehousemanId: 1, 
               at: new Date().toISOString(),
             },
             ...currentProduct.editedBy,
@@ -266,7 +262,7 @@ export const api = {
       return products.length > 0 ? products[0] : null
     } catch (error) {
       console.error("Error fetching product by barcode:", error)
-      throw error // Re-throw the error instead of returning null
+      throw error 
     }
   },
   addProduct: async (productData: Partial<Product>): Promise<Product> => {
@@ -278,11 +274,10 @@ export const api = {
         },
         body: JSON.stringify({
           ...productData,
-          id: Date.now().toString(), // Generate a unique ID
-          stocks: [],
+          id: Date.now().toString(), 
           editedBy: [
             {
-              warehousemanId: 1, // This should be the actual warehouseman ID
+              warehousemanId: 1, 
               at: new Date().toISOString(),
             },
           ],

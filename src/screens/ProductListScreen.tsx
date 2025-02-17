@@ -40,11 +40,17 @@ const ProductListScreen: React.FC = () => {
   const { filteredProducts, filters, setFilters, sortOption, setSortOption, searchQuery, setSearchQuery } =
     useProductFiltering(products)
 
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       const fetchedProducts = await api.getProducts()
-      setProducts(fetchedProducts)
+      // Ensure each product has a stocks array
+      const productsWithStocks = fetchedProducts.map(product => ({
+        ...product,
+        stocks: product.stocks || []
+      }))
+      setProducts(productsWithStocks)
       setError(null)
     } catch (err) {
       setError("Failed to fetch data. Please try again.")
@@ -173,28 +179,16 @@ const ProductListScreen: React.FC = () => {
                 setIsMenuVisible(false)
               }}
             >
-              <Icon name="home" size={24} color="#007AFF" />
+              <Icon name="home" size={24} color="#000000" />
               <Text style={styles.menuItemText}>Accueil</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
-                
-                setIsMenuVisible(false)
+                navigation.navigate("Home")
+                // setIsMenuVisible(false)
               }}
             >
-              <Icon name="category" size={24} color="#007AFF" />
-              <Text style={styles.menuItemText}>Catégories</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                // Handle menu item press
-                setIsMenuVisible(false)
-              }}
-            >
-              <Icon name="settings" size={24} color="#007AFF" />
-              <Text style={styles.menuItemText}>Paramètres</Text>
             </TouchableOpacity>
           </View>
         </View>

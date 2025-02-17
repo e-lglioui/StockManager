@@ -9,6 +9,7 @@ export type RootStackParamList = {
   // AddProduct: { barcode: string }
   ProductDetail: { productId: number };
   AddProduct: { barcode: string };
+  Home: undefined
 }
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -21,4 +22,4 @@ export type AddProductNavigationProp = NativeStackNavigationProp<RootStackParamL
 
 export type AddProductRouteProp = RouteProp<RootStackParamList, "AddProduct">
 export type ProductDetailRouteProp = RouteProp<RootStackParamList, "ProductDetail">
-
+export type HomeRouteProp = RouteProp<RootStackParamList, "Home">

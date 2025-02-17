@@ -1,9 +1,10 @@
 import type React from "react"
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native"
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native"
 import Icon from "react-native-vector-icons/MaterialIcons"
 import { useNavigation } from "@react-navigation/native"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../types/navigation"
+import { useAuth } from "../hooks/useAuth"
 
 type NavbarNavigationProp = NativeStackNavigationProp<RootStackParamList>
 
@@ -14,16 +15,40 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ onMenuPress, onSearchPress }) => {
   const navigation = useNavigation<NavbarNavigationProp>()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Êtes-vous sûr de vouloir vous déconnecter ?",
+      [
+        {
+          text: "Annuler",
+          style: "cancel"
+        },
+        {
+          text: "Déconnecter",
+          onPress: async () => {
+            await logout()
+            if (navigation && navigation.navigate) {
+              navigation.navigate("Login")
+            }
+          },
+          style: "destructive"
+        }
+      ]
+    )
+  }
 
   return (
     <View style={styles.navbar}>
       <TouchableOpacity onPress={onMenuPress}>
-        <Icon name="menu" size={24} color="#007AFF" />
+        <Icon name="menu" size={24} color="black" />
       </TouchableOpacity>
       <Text style={styles.title}>Products</Text>
       <View style={styles.rightIcons}>
         <TouchableOpacity style={styles.iconButton} onPress={onSearchPress}>
-          <Icon name="search" size={24} color="#007AFF" />
+          <Icon name="search" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.iconButton}
@@ -35,7 +60,10 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuPress, onSearchPress }) => {
             }
           }}
         >
-          <Icon name="qr-code-scanner" size={24} color="#007AFF" />
+          <Icon name="qr-code-scanner" size={24} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
+          <Icon name="logout" size={24} color="black" />
         </TouchableOpacity>
       </View>
     </View>
@@ -67,4 +95,3 @@ const styles = StyleSheet.create({
 })
 
 export default Navbar
-

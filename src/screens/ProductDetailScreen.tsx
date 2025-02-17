@@ -51,19 +51,32 @@ const ProductDetailScreen: React.FC = () => {
     fetchProductDetails()
   }, [])
 
+  // const fetchProductDetails = async () => {
+  //   try {
+  //     setLoading(true)
+  //     const fetchedProduct = await api.getProduct(productId)
+  //     setProduct(fetchedProduct)
+  //     setError(null)
+  //   } catch (err) {
+  //     setError("Failed to fetch product details. Please try again.")
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
   const fetchProductDetails = async () => {
     try {
-      setLoading(true)
-      const fetchedProduct = await api.getProduct(productId)
-      setProduct(fetchedProduct)
-      setError(null)
+      setLoading(true);
+      const fetchedProduct = await api.getProduct(productId);
+      // Ensure stocks is always an array
+      fetchedProduct.stocks = fetchedProduct.stocks || [];
+      setProduct(fetchedProduct);
+      setError(null);
     } catch (err) {
-      setError("Failed to fetch product details. Please try again.")
+      setError("Failed to fetch product details. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
+  };
   const totalStock = useMemo(
     () => (product ? product.stocks.reduce((sum, stock) => sum + stock.quantity, 0) : 0),
     [product],

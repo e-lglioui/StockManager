@@ -7,7 +7,7 @@ export interface Product {
   solde?: number
   supplier: string
   image: string
-  stocks: Array<any>; // Replace 'any' with your Stock type if you have one
+  stocks: Array<any>; 
   editedBy: Array<any>
 }
 

@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: 'rgba(0, 0, 0, 0.79)',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
