@@ -99,15 +99,15 @@ describe('api', () => {
       const mockProduct = { id: 1, name: 'Product 1', stocks: [], editedBy: [] };
       fetchMock.mockResponseOnce(JSON.stringify(mockProduct));
       fetchMock.mockResponseOnce(JSON.stringify({ ...mockProduct, stocks: [{ id: 1, quantity: 10 }] }));
-
+  
       const updatedProduct = await api.addStock(1, 'Stock 1', 'City 1', 10, 0, 0);
       expect(updatedProduct.stocks).toEqual([{ id: 1, quantity: 10 }]);
     });
-
+  
     it('should throw an error when fetch fails', async () => {
-      fetchMock.mockReject(new Error('Failed to add stock'));
-
-      await expect(api.addStock(1, 'Stock 1', 'City 1', 10, 0, 0)).rejects.toThrow('Failed to add stock');
+      fetchMock.mockRejectOnce(new Error('Failed to add stock. Status: 500'));
+  
+      await expect(api.addStock(1, 'Stock 1', 'City 1', 10, 0, 0)).rejects.toThrow('Failed to add stock. Status: 500');
     });
   });
 
@@ -164,6 +164,11 @@ describe('api', () => {
     it('should throw an error when fetch fails', async () => {
       fetchMock.mockReject(new Error('Failed to fetch product by barcode'));
 
+      await expect(api.getProductByBarcode('123')).rejects.toThrow('Failed to fetch product by barcode');
+    });
+    it('should throw an error when fetch fails', async () => {
+      fetchMock.mockRejectOnce(new Error('Failed to fetch product by barcode'));
+  
       await expect(api.getProductByBarcode('123')).rejects.toThrow('Failed to fetch product by barcode');
     });
   });

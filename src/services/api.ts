@@ -96,9 +96,9 @@ export const api = {
   ): Promise<Product> {
     try {
       // Vérification des paramètres
-      if (!productId || !name || !city || quantity < 0 || !longitude || !latitude) {
-        throw new Error("Paramètres invalides : Vérifiez les valeurs passées.")
-      }
+      // if (!productId || !name || !city || quantity < 0 || !longitude || !latitude) {
+      //   throw new Error("Paramètres invalides : Vérifiez les valeurs passées.")
+      // }
 
       // Récupération du produit actuel
       const currentProduct = await api.getProduct(productId)
@@ -142,16 +142,13 @@ export const api = {
 
       // Vérification de la réponse
       if (!response.ok) {
-        const errorMessage = `Échec de la mise à jour du stock. Code: ${response.status}`
-        console.error(errorMessage, await response.text())
-        throw new Error(errorMessage)
+        throw new Error(`Failed to add stock. Status: ${response.status}`)
       }
-
-      console.log("Stock ajouté avec succès :", await response.json())
+  
       return response.json()
     } catch (error) {
-      console.error("Erreur dans addStock :", error)
-      throw new Error( "Une erreur inconnue s'est produite.")
+      console.error("Error in addStock:", error)
+      throw error // Re-throw the original error
     }
   },
   deleteStockLocation: async (productId: number, stockId: number): Promise<Product> => {
@@ -246,6 +243,19 @@ export const api = {
     }
   },
 
+  // getProductByBarcode: async (barcode: string): Promise<Product | null> => {
+  //   try {
+  //     const response = await fetch(`${API_URL}/products?barcode=${barcode}`)
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch product by barcode")
+  //     }
+  //     const products = await response.json()
+  //     return products.length > 0 ? products[0] : null
+  //   } catch (error) {
+  //     console.error("Error fetching product by barcode:", error)
+  //     return null
+  //   }
+  // },
   getProductByBarcode: async (barcode: string): Promise<Product | null> => {
     try {
       const response = await fetch(`${API_URL}/products?barcode=${barcode}`)
@@ -256,10 +266,9 @@ export const api = {
       return products.length > 0 ? products[0] : null
     } catch (error) {
       console.error("Error fetching product by barcode:", error)
-      return null
+      throw error // Re-throw the error instead of returning null
     }
   },
-
   addProduct: async (productData: Partial<Product>): Promise<Product> => {
     try {
       const response = await fetch(`${API_URL}/products`, {
