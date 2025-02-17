@@ -3,13 +3,16 @@ import type { RouteProp } from "@react-navigation/native"
 import { ParamListBase } from '@react-navigation/native';
 export type RootStackParamList = {
   Login: undefined
-  ProductList: undefined
+  // ProductList: undefined
   // ProductDetail: { productId: number }
   BarcodeScanner: undefined
   // AddProduct: { barcode: string }
-  ProductDetail: { productId: number };
+  // ProductDetail: { productId: number };
   AddProduct: { barcode: string };
   Home: undefined
+  ProductList: { filter?: string };
+  ProductDetail: { productId: number };
+  Dashboard:undefined
 }
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -23,3 +26,4 @@ export type AddProductNavigationProp = NativeStackNavigationProp<RootStackParamL
 export type AddProductRouteProp = RouteProp<RootStackParamList, "AddProduct">
 export type ProductDetailRouteProp = RouteProp<RootStackParamList, "ProductDetail">
 export type HomeRouteProp = RouteProp<RootStackParamList, "Home">
+export type DashboardProp=RouteProp<RootStackParamList, "Dashboard">

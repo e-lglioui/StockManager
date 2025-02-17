@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Animated } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import type { DashboardData } from "../types/api";
+import type { DashboardData, Product } from "../types/api";
 import {api }from "../services/api";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../types/navigation";
+type DashboardScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const DashboardScreen = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigation = useNavigation();
+  const navigation = useNavigation<DashboardScreenNavigationProp>();
   
   // Animations
   const fadeAnim = new Animated.Value(0);

@@ -17,10 +17,13 @@ export const LoginScreen: React.FC = () => {
   const handleLogin = async () => {
     try {
       await login(secretCode)
+      console.log(secretCode)
       if(secretCode ==="RK189987A"){
-        // navigation.replace("d")
-      }
+        console.log("true")
+        navigation.replace("Dashboard")
+      }else{
       navigation.replace("Home")
+      }
     } catch (error) {
 
       console.error("Login failed:", error)
@@ -29,7 +32,7 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" secureTextEntry />
+      <Input value={secretCode} onChangeText={setSecretCode} placeholder="Entrez votre code secret" />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (

@@ -57,10 +57,10 @@ export interface ApiError {
   message: string
 }
 export interface DashboardData {
-  totalProducts: number
-  totalCities: number
-  outOfStockProducts: number
-  totalStockValue: number
-  mostAddedProducts: Array<{ name: string; quantity: number }>
-  mostRemovedProducts: Array<{ name: string; quantity: number }>
+  totalProducts: number;
+  totalCities: number;
+  outOfStockProducts: number;
+  totalStockValue: number;
+  mostAddedProducts: Array<{ id: number; name: string; quantity: number }>;
+  mostRemovedProducts: Array<{ id: number; name: string; quantity: number }>;
 }
